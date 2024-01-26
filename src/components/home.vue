@@ -38,7 +38,8 @@
                         </div>
                         <span class="p-buttonset max-content col-fixed">
                             <Button @click="EditarModal(tareas.item.id,tareas.item.nombreTarea,tareas.item.descripcionTarea)" v-tooltip.top="'Modificar tarea'" severity="warning" icon="pi pi-pencil" />
-                
+                            <Button @click="EliminarConf(tareas.item.id)" v-tooltip.top="'Eliminar tarea'" severity="danger" icon="pi pi-trash" />
+                            <Button @click="FinalizarRegresarTareaConf(tareas.item.id,true)" v-tooltip.top="'Completar tarea'" icon="pi pi-check-square" />
                         </span>
                         <div class="mt-2 w-full" style="height: 1px; background-color: #e5e7eb;"></div>
                     </div>
