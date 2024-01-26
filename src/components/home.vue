@@ -82,7 +82,209 @@
 </template>
 
 <script>
-   
+   import {db} from '../firebase.js';
+// eslint-disable-next-line no-unused-vars
+import { getDocs, collection, where, query, addDoc, updateDoc, doc } from 'firebase/firestore';
+// eslint-disable-next-line no-unused-vars
+import {ref, onMounted} from 'vue';
+// eslint-disable-next-line no-unused-vars
+import {success, error} from '../myToastService.js';
+
+
+export default {
+    setup(){
+    },
+    name: 'HomeComponent',
+    firebase: {
+        //websites: websitesRef
+    },
+    data(){
+        return {
+            tareas: [],
+            tareasPediente: [],
+            nombre: '',
+            descripcion: '',
+            visible: false,
+            usuario: '',
+            token: '',
+            nombreEdit: '',
+            descripcionEdit: '',
+            idTareaTemp:'',
+        }
+    },
+    mounted() {
+        this.token = localStorage.getItem('token');
+        this.usuario = localStorage.getItem('usuario');
+        if(this.token == null || this.usuario == null){
+            this.cerrarSesion();
+        }
+        else{
+            this.cargarTareas(this.token);
+        }
+    },
+    methods: {
+        EliminarConf(id) {
+            this.$confirm.require({
+                message: '¿Está seguro de eliminar la tarea?',
+                header: 'Eliminar tarea',
+                icon: 'pi pi-exclamation-triangle',
+                acceptLabel: 'Sí', // Cambiar el texto del botón Aceptar
+                rejectLabel: 'No',
+                accept: () => {
+                    this.eliminartarea(id);
+                },
+                reject: () => {
+                    //callback to execute when user rejects the action
+                }
+            });
+        },
+        EditarConf(id) {
+            this.$confirm.require({
+                message: '¿Está seguro de modificar la tarea?',
+                header: 'Modificar tarea',
+                icon: 'pi pi-exclamation-triangle',
+                acceptLabel: 'Sí', // Cambiar el texto del botón Aceptar
+                rejectLabel: 'No',
+                accept: () => {
+                    this.editarTarea(id);
+                },
+                reject: () => {
+                    //callback to execute when user rejects the action
+                }
+            });
+        },
+        FinalizarRegresarTareaConf(id,validador) {
+            this.$confirm.require({
+                message: (validador) ? '¿Está seguro de finalizar la tarea?' : '¿Está seguro de restaurar la tarea?',
+                header: (validador) ? 'Finalizar tarea' : 'Restaurar tarea',
+                icon: 'pi pi-exclamation-triangle',
+                acceptLabel: 'Sí', // Cambiar el texto del botón Aceptar
+                rejectLabel: 'No',
+                accept: () => {
+                    this.completarRegresarTarea(id,validador);
+                },
+                reject: () => {
+                    //callback to execute when user rejects the action
+                }
+            });
+        },
+        EditarModal(id,nombre,descripcion){
+            this.idTareaTemp = id;
+            this.visible = true;
+            this.nombreEdit = nombre;
+            this.descripcionEdit = descripcion;
+        },
+        async cargarTareas(idPersona) {
+            const query2 = query(collection(db, 'tasks'), where('idPersona', '==', idPersona), where('estado', '==', true));
+            try {
+                const tasksSnapshot = await getDocs(query2);
+                if(tasksSnapshot.empty){
+                    error('No existe tareas','Actualmente no posees ninguna tarea');
+                }
+                else{
+                    tasksSnapshot.forEach((task) => {
+                        if(task.data().completado){
+                            this.tareasPediente.push({...task.data(), id: task.id});
+                        }
+                        else {
+                            this.tareas.push({...task.data(), id: task.id});
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Error al cargar las tareas:", error);
+                error();
+            }
+        },
+        async eliminartarea(id){
+            const object = this.tareas.find(tarea=> tarea.id == id);
+            object.estado = false;
+            delete object.id;
+            console.log(object);
+            // eslint-disable-next-line no-unused-vars
+            try {
+                await updateDoc(doc(db, 'tasks', id), object).then(()=>{
+                    this.recargarDatos(object.idPersona);
+                    success("Eliminación de tarea exitosa");
+                })
+            } catch (error) {
+                console.error("Error al eliminar la tarea:", error);
+                error('Error eliminar tarea');
+            }
+        },
+        async creartarea(){
+            const object = {
+                nombreTarea: this.nombre,
+                descripcionTarea: this.descripcion,
+                estado: true,
+                completado: false,
+                idPersona: this.token
+            };
+
+            try {
+                await addDoc(collection(db, 'tasks'), object).then(()=>{
+                    this.recargarDatos(this.token);
+                    this.nombre = '';
+                    this.descripcion = '';
+                    success("Creación de tarea exitosa");
+                })
+            } catch (error) {
+                console.error("Error al crear la tarea:", error);
+                error('Error crear tarea');
+            }
+        },
+
+        async completarRegresarTarea(id, validador){
+            debugger;
+            const objectCompletar = (validador) ? this.tareas.find(tarea=> tarea.id == id): this.tareasPediente.find(tarea=> tarea.id == id);
+            objectCompletar.completado = validador;
+            delete objectCompletar.id;
+            // eslint-disable-next-line no-unused-vars
+            try {
+                await updateDoc(doc(db, 'tasks', id), objectCompletar).then(()=>{
+                    this.recargarDatos(objectCompletar.idPersona);
+                    success("Consulta exitosa");
+                });
+            } catch (error) {
+                console.error("Error:", error);
+                error('Error');
+            }
+        },
+
+        async editarTarea(id){
+            try {
+                const object = {
+                    nombreTarea: this.nombreEdit,
+                    descripcionTarea: this.descripcionEdit,
+                    estado: true,
+                    completado: false,
+                    idPersona: this.token
+                };
+                await updateDoc(doc(db, 'tasks', id), object).then(()=>{
+                    this.recargarDatos(object.idPersona);
+                    this.idTareaTemp = '';
+                    success("Edición de tarea exitosa");
+                    this.visible = false;
+                })
+            } catch (error) {
+                console.error("Error al editar la tarea:", error);
+                error('Error');
+            }
+        },
+
+        async recargarDatos(id){
+            this.tareas = [],
+            this.tareasPediente = []
+            this.cargarTareas(id);
+        },
+
+        cerrarSesion(){
+            localStorage.removeItem('usuario');
+            localStorage.removeItem('token');
+            this.$router.push('/');
+        }
+    }
+};
 </script>
 
 <style scoped>
