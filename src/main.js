@@ -24,6 +24,7 @@ import DialogService from 'primevue/dialogservice'
 import Dialog from 'primevue/dialog';
 
 
+import vuefire from 'vuefire'
 const app = createApp(App);
 
 const routes = [
@@ -42,6 +43,7 @@ app.use(ConfirmationService);
 app.use(ToastService);
 app.use(DialogService);
 app.use(router);
+app.use(vuefire);
 
 
 app.component('Button', Button );
