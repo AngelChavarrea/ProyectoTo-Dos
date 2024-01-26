@@ -26,7 +26,26 @@
         </div>
     </div>
     <Divider />
-    
+    <div class="w-full grid m-0">
+        <div class="card col-6 mb-4 componente-padre">
+            <OrderList v-model="tareas" listStyle="height:300px" dataKey="id" class="w-full">
+                <template #header>Lista de tareas pendientes</template>
+                <template #item="tareas">
+                    <div class="w-full grid m-0">
+                        <div class="col grid p-0">
+                            <p class="col-4 text-left">{{ tareas.item.nombreTarea }}</p>
+                            <p class="col-8 font-bold text-900 text-left">{{ tareas.item.descripcionTarea }}</p>
+                        </div>
+                        <span class="p-buttonset max-content col-fixed">
+                            <Button @click="EditarModal(tareas.item.id,tareas.item.nombreTarea,tareas.item.descripcionTarea)" v-tooltip.top="'Modificar tarea'" severity="warning" icon="pi pi-pencil" />
+                
+                        </span>
+                        <div class="mt-2 w-full" style="height: 1px; background-color: #e5e7eb;"></div>
+                    </div>
+                </template>
+            </OrderList>
+        </div>
+    </div>
 </template>
 
 <script>
