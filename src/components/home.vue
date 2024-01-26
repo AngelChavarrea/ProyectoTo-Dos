@@ -45,7 +45,39 @@
                 </template>
             </OrderList>
         </div>
+
+    <div class="card col-6 mb-4 componente-padre">
+            <OrderList v-model="tareasPediente" listStyle="height:300px" dataKey="id" class="w-full">
+                <template #header>Lista de tareas completadas</template>
+                <template #item="tareasPediente">
+                    <div class="w-full grid m-0">
+                        <div class="col grid p-0">
+                            <p class="col-4 text-left line-through">{{ tareasPediente.item.nombreTarea }}</p>
+                            <p class="col-8 font-bold text-900 text-left line-through">{{ tareasPediente.item.descripcionTarea }}</p>
+                        </div>
+                        <span class="p-buttonset max-content col-fixed">
+                            <Button @click="FinalizarRegresarTareaConf(tareasPediente.item.id,false)" v-tooltip.top="'Volver a tareas pendientes'" icon="pi pi-eraser" />
+                        </span>
+                        <div class="mt-2 w-full" style="height: 1px; background-color: #e5e7eb;"></div>
+                    </div>
+                </template>
+            </OrderList>
+        </div>
     </div>
+    <ConfirmDialog></ConfirmDialog>
+    <Dialog v-model:visible="visible" modal header="Editar tarea" :style="{ width: '50rem' }" :breakpoints="{ '1199px': '45vw', '575px': '75vw' }">
+        <div class="w-full grid">
+            <span class="p-input-icon-right mt-2 text-left col-12">
+                         <InputText class="w-full" v-model="nombreEdit"  placeholder="Nombre de la tarea"/>
+             </span>
+             <span class="p-input-icon-right mt-2 text-left col-12">
+                         <InputText class="w-full" v-model="descripcionEdit"  placeholder="Descrición de la tarea"/>
+             </span>
+             <div class="col-12 flex justify-content-center flex-wrap">
+                <Button :disabled="nombreEdit=='' || descripcionEdit==''"  @click="EditarConf(idTareaTemp)" label="Editar" class="mt-2"/> 
+           </div>
+        </div>
+    </Dialog>
 </template>
 
 <script>
