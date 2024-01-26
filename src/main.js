@@ -29,7 +29,8 @@ const app = createApp(App);
 
 const routes = [
     { path: '', component: () => import('./components/login.vue')  },
-    
+    { path: '/crear-cuenta', component: () => import('./components/crearCuenta.vue')  },
+    { path: '/home', component: () => import('./components/home.vue')  },
 ];
   
   const router = createRouter({
