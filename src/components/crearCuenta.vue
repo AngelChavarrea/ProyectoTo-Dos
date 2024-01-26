@@ -33,5 +33,60 @@
 </template>
 
 <script>
-    
+     import {db} from '../firebase.js';
+    // eslint-disable-next-line no-unused-vars
+    import { getDocs, collection, where, query, addDoc, updateDoc, doc } from 'firebase/firestore';
+    // eslint-disable-next-line no-unused-vars
+    import {ref, onMounted} from 'vue';
+    // eslint-disable-next-line no-unused-vars
+    import {success, error} from '../myToastService.js';
+    export default {
+        name: 'CrearCuentaComponent',
+        data(){
+            return {
+                contrasenaVisible: false,
+                usuario:'',
+                password:'',
+                password2:'',
+            }
+        },
+        mounted() {
+            this.token = localStorage.getItem('token');
+            this.usuario = localStorage.getItem('usuario');
+            if(this.token != null && this.usuario != null){
+                this.$router.push('/home');
+            }
+        },
+        methods: {
+            cambiarEstado(){
+                this.contrasenaVisible = (this.contrasenaVisible) ? false : true
+            },
+            regresarLogin(){
+                this.$router.push('/');
+            },
+            async crearCuenta(){
+                const object = {
+                    usuario: this.usuario,
+                    password: this.password,
+                };
+
+                try {
+                    const query2 = query(collection(db, 'personas'), where('usuario', '==', this.usuario));
+                    const tasksSnapshot = await getDocs(query2);
+                    if(tasksSnapshot.empty){
+                        await addDoc(collection(db, 'personas'), object).then(()=>{
+                            success('Registro exitoso','Inicia sesión con tu cuenta');
+                            this.regresarLogin();
+                        })
+                    }
+                    else{
+                        error('Registro fallido', 'El usuario ya existe');
+                    }
+                    
+                } catch (error) {
+                    error('Registro fallido');
+                }
+            }
+        }
+    };
 </script>
