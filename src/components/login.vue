@@ -29,5 +29,59 @@
 </template>
 
 <script>
-   
+    import {db} from '../firebase.js';
+    // eslint-disable-next-line no-unused-vars
+    import { getDocs, collection, where, query, addDoc, updateDoc, doc } from 'firebase/firestore';
+    // eslint-disable-next-line no-unused-vars
+    import {ref, onMounted} from 'vue';
+
+    import {success, error} from '../myToastService.js';
+    export default {
+        name: 'LoginComponent',
+        data(){
+            return {
+                contrasenaVisible: false,
+                password: '',
+                usuario: ''
+            }
+        },
+        mounted() {
+            this.token = localStorage.getItem('token');
+            this.usuario = localStorage.getItem('usuario');
+            if(this.token != null && this.usuario != null){
+                this.$router.push('/home');
+            }
+        },
+        methods: {
+            cambiarEstado(){
+                this.contrasenaVisible = (this.contrasenaVisible) ? false : true
+            },
+            crearCuenta(){
+                this.$router.push('/crear-cuenta');
+            },
+            async iniciarSesion(){
+                const query2 = query(collection(db, 'personas'), where('password', '==', this.password), where('usuario', '==', this.usuario));
+
+                try {
+                    const tasksSnapshot = await getDocs(query2);
+                        if(tasksSnapshot.empty){
+                            this.password = '';
+                            this.usuario = '';
+                            error('Credenciales invalidas', 'El usuario o contraseña es incorrecta');
+                        }
+                        else{
+                            tasksSnapshot.forEach((task) => {
+                                localStorage.setItem('usuario', task.data().usuario);
+                                localStorage.setItem('token', task.id);
+                                success('Login Exitoso', 'Se verifico correctamente las credenciales');
+                                this.$router.push('/home');
+                            });
+                        }
+                        
+                } catch (error) {
+                    console.error("Error al iniciar sesión:", error);
+                }
+            }
+        }
+    };
 </script>
